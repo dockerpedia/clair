@@ -59,7 +59,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 	}
 
 	//Base paths
-	condaPath := "/Users/mosorio/miniconda3/"
+	condaPath := "/opt/conda/"
 	binaryPath := condaPath + "bin/conda"
 	envsPath := condaPath + "envs"
 
