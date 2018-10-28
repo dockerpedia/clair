@@ -18,7 +18,6 @@ package conda
 import (
 		"io/ioutil"
 	"os"
-	"os/exec"
 		log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
@@ -27,6 +26,8 @@ import (
 	"github.com/coreos/clair/pkg/tarutil"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"regexp"
 )
 
 type condaPackage struct {
@@ -47,6 +48,7 @@ func init() {
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+
 	// Create a map to store packages and ensure their uniqueness
 	packagesMap := make(map[string]database.FeatureVersion)
 
@@ -58,64 +60,67 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		return []database.FeatureVersion{}, commonerr.ErrFilesystem
 	}
 
-	//Base paths
-	condaPath := "/opt/conda/"
-	binaryPath := condaPath + "bin/conda"
-	envsPath := condaPath + "envs"
+	//Files with metadata
+	var filesPackages []string
 
-	//Find the environments of installation conda
-	envs := findEnvironments(envsPath)
-	for _, env := range envs {
-		//Find the packages by env
-		findPackagesEnvironment(packagesMap, binaryPath, env)
+	//get the files with metadata of conda
+	for fPath, f := range files {
+		//detect files only in opt
+		packageDir := regexp.MustCompile("opt(/conda/.*)(conda-meta).*.json")
+		packageMatch := packageDir.FindStringSubmatch(fPath)
+		if len(packageMatch) != 0 {
+			fileName := filepath.Base(fPath)
+			fileTmp := tmpDir+"/"+fileName
+			err = ioutil.WriteFile(fileTmp, f, 0600)
+			filesPackages = append(filesPackages, fileTmp)
+			if err != nil {
+				log.WithError(err).Error("could not create copy file")
+				return []database.FeatureVersion{}, commonerr.ErrFilesystem
+			}
+		}
 	}
 
-	// Convert the map to a slice
+	//parse the files and obtain the packages
+	parsePackageFiles(packagesMap, filesPackages)
 	packages := make([]database.FeatureVersion, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
 		packages = append(packages, pkg)
 	}
 
 	return packages, nil
+
 }
 
 func (l lister) RequiredFilenames() []string {
 	return []string{""}
 }
 
-func findPackagesEnvironment(packagesMap map[string]database.FeatureVersion, pathBinary, env string){
-	// Ask the packages using conda list.
-	out, err := exec.Command(pathBinary, "list", "--json", "-n", env).CombinedOutput()
-	if err != nil {
-		log.WithError(err).WithField("output", string(out)).Error("could not query RPM")
-	}
+func parsePackageFiles(packagesMap map[string]database.FeatureVersion, files []string) {
+	for _, f := range files {
+			jsonFile, err := os.Open(f)
+			// if we os.Open returns an error then handle it
+			if err != nil {
+				fmt.Println(err)
+			}
+			// defer the closing of our jsonFile so that we can parse it later on
+			defer jsonFile.Close()
 
-	// Parse JSON from conda list
-	var listPackages []condaPackage
-	err = json.Unmarshal(out, &listPackages)
-	if err != nil {
-		log.WithError(err).WithField("output", string(out)).Error("marshall	")
-		fmt.Println(err)
-	}
+			out, _ := ioutil.ReadAll(jsonFile)
 
-	// Create and add packages to map
-	for _, p := range listPackages {
-		pkg := database.FeatureVersion{
-			Feature: database.Feature{
-				Name:  p.Name,
-			},
-			Version:  p.Version,
+			// we initialize our Users array
+			var condaPackage condaPackage
+
+			// we unmarshal our byteArray which contains our
+			json.Unmarshal(out, &condaPackage)
+			if err != nil {
+				log.WithError(err).WithField("output", string(out)).Error("marshall	")
+			}
+			pkg := database.FeatureVersion{
+				Feature: database.Feature{
+					Name: condaPackage.Name,
+				},
+				Version: condaPackage.Version,
+			}
+			packagesMap[pkg.Feature.Name+"#"+pkg.Version] = pkg
 		}
-		packagesMap[pkg.Feature.Name+"#"+pkg.Version] = pkg
-	}
 }
-
-func findEnvironments(envsPath string) ([]string){
-	envs := []string{"base"}
-	directories, _ := ioutil.ReadDir(envsPath)
-	for _, envName := range directories{
-		envs = append(envs, envName.Name())
-	}
-	return envs
-}
-
