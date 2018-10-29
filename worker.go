@@ -135,6 +135,9 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	}
 	if len(featureVersions) > 0 {
 		log.WithFields(log.Fields{logLayerName: name, "feature count": len(featureVersions)}).Debug("detected features")
+		for _, f := range featureVersions{
+			log.WithFields(log.Fields{logLayerName: name, "feature": f.Feature.Name + " Version" + f.Feature.Name }).Debug("detected features")
+		}
 	}
 
 	return
