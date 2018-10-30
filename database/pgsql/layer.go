@@ -372,11 +372,12 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 		}
 
 		if namespaceFeaturesParent == namespaceFeaturesChild {
-			log.Debug("features namespace is the same")
 			delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 			for _, nv := range delNV {
 				del = append(del, *parentLayerFeaturesMapNV[nv])
 			}
+		} else {
+			log.Debug("mosorio: the layer has different types of package")
 		}
 	}
 

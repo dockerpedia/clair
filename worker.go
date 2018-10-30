@@ -157,7 +157,7 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 	}
 	if namespace != nil {
 		log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
-		if namespace.Name != "conda"{
+		if namespace.Name == "conda" {
 			featureNamespace = namespace
 			namespace = parent.Namespace
 		} else {
