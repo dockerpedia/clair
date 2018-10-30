@@ -114,6 +114,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 	var rootNamespace int
 	// Set Root Namespace
 	if layer.Parent == nil {
+		log.Error(layer.Namespace)
 		rootNamespace = layer.Namespace.ID
 	} else {
 		rootNamespace = layer.Parent.RootNamespace.ID
