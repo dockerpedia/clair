@@ -241,7 +241,7 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
+func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
 	tf := time.Now()
 
 	// Verify parameters
@@ -279,32 +279,18 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	// Find or insert namespace if provided.
 	var namespaceID zero.Int
-	var namespaceRootID zero.Int
-
 	if layer.Namespace != nil {
 		n, err := pgSQL.insertNamespace(*layer.Namespace)
 		if err != nil {
 			return err
 		}
 		namespaceID = zero.IntFrom(int64(n))
-		//root
-		if layer.Parent == nil {
-			namespaceRootID = namespaceID
-		} else {
-			namespaceRootID = zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
-		}
-
 	} else if layer.Namespace == nil && layer.Parent != nil {
-		log.Error(layer.ID, "mosorio: tiene namespace")
-
 		// Import the Namespace from the parent if it has one and this layer doesn't specify one.
-		if layer.Parent.Namespace != nil && layer.Parent.RootNamespace != nil {
+		if layer.Parent.Namespace != nil {
 			namespaceID = zero.IntFrom(int64(layer.Parent.Namespace.ID))
-			namespaceRootID =  zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
 		}
 	}
-	namespaceRootID = zero.IntFrom(int64(layer.RootNamespace.ID))
-
 
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
@@ -315,7 +301,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, namespaceRootID).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, rootNamespace).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
