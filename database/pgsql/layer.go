@@ -354,7 +354,7 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	if layer.Parent == nil {
 		// There is no parent, every Features are added.
 		add = append(add, layer.Features...)
-	} else if layer.Parent.Namespace == layer.Namespace {
+	} else if layer.Parent != nil {
 		// There is a parent, we need to diff the Features with it.
 
 		// Build name:version structures.
@@ -363,15 +363,20 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 
 		// Calculate the added and deleted FeatureVersions name:version.
 		addNV := compareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
-		delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+
 
 		// Fill the structures containing the added and deleted FeatureVersions.
 		for _, nv := range addNV {
 			add = append(add, *layerFeaturesMapNV[nv])
 		}
-		for _, nv := range delNV {
-			del = append(del, *parentLayerFeaturesMapNV[nv])
+
+		if layer.Parent.Namespace == layer.Namespace {
+			delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+			for _, nv := range delNV {
+				del = append(del, *parentLayerFeaturesMapNV[nv])
+			}
 		}
+
 	}
 
 	// Insert FeatureVersions in the database.
