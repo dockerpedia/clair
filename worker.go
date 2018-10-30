@@ -115,11 +115,17 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 	// Set Root Namespace
 	if layer.Parent == nil {
 		rootNamespace=layer.Namespace.Name
-	} else {
-		log.Error(layer.Parent.Namespace)
-
-		log.Error(layer.Parent.RootNamespace)
-		rootNamespace=layer.Parent.Namespace.Name
+	} else 	if parentName != "" {
+		parent, err := datastore.FindLayer(parentName, true, false)
+		if err != nil && err != commonerr.ErrNotFound {
+			return err
+		}
+		if err == commonerr.ErrNotFound {
+			log.WithFields(log.Fields{logLayerName: name, "parent layer": parentName}).Warning("the parent layer is unknown. it must be processed first")
+			return ErrParentUnknown
+		}
+		layer.Parent = &parent
+		rootNamespace = parent.RootNamespace.Name
 	}
 
 	log.Error("valor ", rootNamespace)
