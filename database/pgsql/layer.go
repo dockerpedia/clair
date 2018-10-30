@@ -241,7 +241,7 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
+func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) error {
 	tf := time.Now()
 
 	// Verify parameters
@@ -277,6 +277,12 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
 	}
 
+
+	var IDRootNamespace int
+	err = pgSQL.QueryRow(searchNamespace, namespaceName).Scan(&IDRootNamespace)
+
+
+
 	// Find or insert namespace if provided.
 	var namespaceID zero.Int
 	if layer.Namespace != nil {
@@ -292,7 +298,6 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
 		}
 	}
 
-	rootNamespaceId := zero.IntFrom(int64(rootNamespace))
 
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
@@ -303,7 +308,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, rootNamespaceId).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, IDRootNamespace).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
