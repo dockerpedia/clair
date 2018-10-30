@@ -279,6 +279,8 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	// Find or insert namespace if provided.
 	var namespaceID zero.Int
+	var namespaceRootID zero.Int
+
 	if layer.Namespace != nil {
 		n, err := pgSQL.insertNamespace(*layer.Namespace)
 		if err != nil {
@@ -289,16 +291,14 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		// Import the Namespace from the parent if it has one and this layer doesn't specify one.
 		if layer.Parent.Namespace != nil {
 			namespaceID = zero.IntFrom(int64(layer.Parent.Namespace.ID))
+			namespaceRootID =  zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
 		}
 	}
 
-	var namespaceRootID zero.Int
 	if layer.Parent == nil {
 		namespaceRootID = namespaceID
-	} else {
-		namespaceRootID = zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
 	}
-
+	
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
