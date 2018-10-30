@@ -17,7 +17,7 @@
 //
 // This detector is necessary to determine the precise Debian version when it
 // is an unstable version for instance.
-package aptsources
+package condasources
 
 import (
 			"github.com/coreos/clair/database"
@@ -26,6 +26,9 @@ import (
 )
 
 type detector struct{}
+
+
+const ParserName = "dpkg"
 
 type condaPackage struct {
 	BaseURL 	*string		`json:"base_url"`
@@ -48,11 +51,9 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		return nil, nil
 	}
 
-
-
 	return &database.Namespace{
 		Name:          "conda",
-		VersionFormat: "4.11",
+		VersionFormat: ParserName,
 	}, nil
 
 }

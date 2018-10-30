@@ -110,6 +110,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
+
 	return datastore.InsertLayer(layer)
 }
 
