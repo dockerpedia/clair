@@ -146,6 +146,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 			}
 		}
 	}
+	parsePackageFiles(packagesMap, filesPackages)
 
 	// Convert the map to a slice
 	packages := make([]database.FeatureVersion, 0, len(packagesMap))
