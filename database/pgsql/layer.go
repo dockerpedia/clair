@@ -294,7 +294,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	var namespaceRootID zero.Int
 	if layer.Parent == nil {
-		namespaceRootID = zero.IntFrom(int64(layer.Namespace.ID))
+		namespaceRootID = namespaceID
 	} else {
 		namespaceRootID = zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
 	}
