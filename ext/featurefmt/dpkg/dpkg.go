@@ -27,12 +27,6 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/coreos/clair/pkg/commonerr"
-	"os"
-	"fmt"
-	"io/ioutil"
-	"encoding/json"
-	"path/filepath"
 )
 
 var (
@@ -41,19 +35,6 @@ var (
 )
 
 type lister struct{}
-
-type condaPackage struct {
-	BaseURL 	*string		`json:"base_url"`
-	BuildNumber *int  		`json:"build_number"`
-	BuildString string  	`json:"build_string"`
-	Channel 	string  	`json:"channel"`
-	DistName 	string  	`json:"dist_name"`
-	Name 		string  	`json:"name"`
-	Platform 	*string 	`json:"platform"`
-	Version 	string  	`json:"version"`
-}
-
-
 
 func init() {
 	featurefmt.RegisterLister("dpkg", &lister{})
@@ -127,27 +108,6 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		}
 	}
 
-	var filesPackages []string
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "conda")
-
-	//get the files with metadata of conda
-	for fPath, f := range files {
-		//detect files only in opt
-		packageDir := regexp.MustCompile("opt(/conda/.*)(conda-meta).*.json")
-		packageMatch := packageDir.FindStringSubmatch(fPath)
-		if len(packageMatch) != 0 {
-			fileName := filepath.Base(fPath)
-			fileTmp := tmpDir+"/"+fileName
-			err = ioutil.WriteFile(fileTmp, f, 0600)
-			filesPackages = append(filesPackages, fileTmp)
-			if err != nil {
-				log.WithError(err).Error("could not create copy file")
-				return []database.FeatureVersion{}, commonerr.ErrFilesystem
-			}
-		}
-	}
-	parsePackageFiles(packagesMap, filesPackages)
-
 	// Convert the map to a slice
 	packages := make([]database.FeatureVersion, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
@@ -157,39 +117,6 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 	return packages, nil
 }
 
-
-func parsePackageFiles(packagesMap map[string]database.FeatureVersion, files []string) {
-	for _, f := range files {
-		jsonFile, err := os.Open(f)
-		// if we os.Open returns an error then handle it
-		if err != nil {
-			fmt.Println(err)
-		}
-		// defer the closing of our jsonFile so that we can parse it later on
-		defer jsonFile.Close()
-
-		out, _ := ioutil.ReadAll(jsonFile)
-
-		// we initialize our Users array
-		var condaPackage condaPackage
-
-		// we unmarshal our byteArray which contains our
-		json.Unmarshal(out, &condaPackage)
-		if err != nil {
-			log.WithError(err).WithField("output", string(out)).Error("marshall	")
-		}
-		pkg := database.FeatureVersion{
-			Feature: database.Feature{
-				Name: condaPackage.Name,
-			},
-			Version: condaPackage.Version,
-		}
-		packagesMap[pkg.Feature.Name+"#"+pkg.Version] = pkg
-	}
-}
-
-
 func (l lister) RequiredFilenames() []string {
 	return []string{"var/lib/dpkg/status"}
 }
-
