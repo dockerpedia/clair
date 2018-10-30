@@ -357,20 +357,26 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	} else if layer.Parent != nil {
 		// There is a parent, we need to diff the Features with it.
 
+		namespaceFeaturesChild := layer.Features[0].Feature.Namespace.Name
+		namespaceFeaturesParent := layer.Parent.Features[0].Feature.Namespace.Name
+
 		// Build name:version structures.
 		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
 		parentLayerFeaturesMapNV, parentLayerFeaturesNV := createNV(layer.Parent.Features)
 
 		// Calculate the added and deleted FeatureVersions name:version.
 		addNV := compareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
-		delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 
-		// Fill the structures containing the added and deleted FeatureVersions.
 		for _, nv := range addNV {
 			add = append(add, *layerFeaturesMapNV[nv])
 		}
-		for _, nv := range delNV {
-			del = append(del, *parentLayerFeaturesMapNV[nv])
+
+		if namespaceFeaturesParent == namespaceFeaturesChild {
+			log.Debug("features namespace is the same")
+			delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+			for _, nv := range delNV {
+				del = append(del, *parentLayerFeaturesMapNV[nv])
+			}
 		}
 	}
 
