@@ -282,19 +282,26 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	var namespaceRootID zero.Int
 
 	if layer.Namespace != nil {
+		log.Error(layer.ID, "mosorio: tiene namespace")
 		n, err := pgSQL.insertNamespace(*layer.Namespace)
 		if err != nil {
 			return err
 		}
 		namespaceID = zero.IntFrom(int64(n))
-		//root
+		//es nuevo y el padre es null, copio el mismo valor
 		if layer.Parent == nil {
 			namespaceRootID = namespaceID
+			log.Error(layer.ID, "mosorio: tiene namespace y es root", namespaceRootID)
+
 		} else {
 			namespaceRootID = zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
+			log.Error(layer.ID, "mosorio: tiene namespace y no es root", namespaceRootID)
+
 		}
 
 	} else if layer.Namespace == nil && layer.Parent != nil {
+		log.Error(layer.ID, "mosorio: no tiene namespace")
+
 		// Import the Namespace from the parent if it has one and this layer doesn't specify one.
 		if layer.Parent.Namespace != nil && layer.Parent.RootNamespace != nil {
 			namespaceID = zero.IntFrom(int64(layer.Parent.Namespace.ID))
