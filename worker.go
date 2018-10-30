@@ -159,6 +159,11 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 		log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
 		if namespace.Name == "conda"{
 			featureNamespace = namespace
+			namespace = parent.Namespace
+			log.WithFields(log.Fields{logLayerName: name, "detected featurenamespace": featureNamespace.Name}).Debug("detected namespace")
+			log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
+			log.WithFields(log.Fields{logLayerName: name, "detected featurenamespace": featureNamespace.Name}).Debug("detected namespace")
+
 		} else {
 			return
 		}
