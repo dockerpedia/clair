@@ -295,11 +295,12 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 		} else {
 			log.Error("mosorio: tiene namespace y no es root")
-			log.Error(layer.Parent, "mosorio: tiene namespace y no es root")
 			log.Error(layer.Parent.RootNamespace, "mosorio: tiene namespace y no es root")
-
-			namespaceRootID = zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
-			log.Error( "mosorio: tiene namespace y no es root", namespaceRootID)
+			if layer.Parent != nil && layer.Parent.RootNamespace != nil {
+				namespaceRootID = zero.IntFrom(int64(layer.Parent.RootNamespace.ID))
+			} else {
+				log.Error("mosorio: tiene namespace y no es root", layer.Parent)
+			}
 
 		}
 
