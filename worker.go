@@ -117,6 +117,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 // detectContent downloads a layer's archive and extracts its Namespace and
 // Features.
 func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
+	var featureNamespace *database.Namespace
 	totalRequiredFiles := append(featurefmt.RequiredFilenames(), featurens.RequiredFilenames()...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
@@ -124,13 +125,18 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 		return
 	}
 
-	namespace, err = detectNamespace(name, files, parent)
+	namespace, featureNamespace, err = detectNamespace(name, files, parent)
 	if err != nil {
 		return
 	}
 
 	// Detect features.
-	featureVersions, err = detectFeatureVersions(name, files, namespace, parent)
+	if featureNamespace != nil{
+		featureVersions, err = detectFeatureVersions(name, files, featureNamespace, parent)
+	} else {
+		featureVersions, err = detectFeatureVersions(name, files, namespace, parent)
+	}
+
 	if err != nil {
 		return
 	}
@@ -144,15 +150,20 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	return
 }
 
-func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer) (namespace *database.Namespace, err error) {
+func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer) (namespace,  featureNamespace *database.Namespace, err error) {
 	namespace, err = featurens.Detect(files)
 	if err != nil {
 		return
 	}
 	if namespace != nil {
 		log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
-		return
+		if namespace.Name == "conda"{
+			featureNamespace = namespace
+		} else {
+			return
+		}
 	}
+
 
 	// Fallback to the parent's namespace.
 	if parent != nil {
