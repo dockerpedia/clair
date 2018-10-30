@@ -162,8 +162,8 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		switch modification {
 		case "add":
 			mapFeatureVersions[fv.ID] = fv
-		case "del":
-			delete(mapFeatureVersions, fv.ID)
+		//case "del":
+			//delete(mapFeatureVersions, fv.ID)
 		default:
 			log.WithField("modification", modification).Warning("unknown Layer_diff_FeatureVersion's modification")
 			return featureVersions, database.ErrInconsistent
