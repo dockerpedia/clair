@@ -38,6 +38,8 @@ func TestCondaFeatureDetection(t *testing.T) {
 			Files: tarutil.FilesMap{
 				"opt/conda/conda-meta/apr-1.6.3-he795440_0.json":
 					featurefmt.LoadFileForTest("conda/testdata/conda-meta/apr-1.6.3-he795440_0.json"),
+				"opt/conda/conda-meta/history":
+					featurefmt.LoadFileForTest("conda/testdata/conda-meta/apr-1.6.3-he795440_0.json"),
 				"opt/conda/envs/another/conda-meta/(expat-2.2.6-h0a44026_0.json":
 					featurefmt.LoadFileForTest("conda/testdata/conda-meta/expat-2.2.6-h0a44026_0.json"),
 				"opt/conda/envs/another/conda-wrongpath/(expat-2.2.6-h0a44026_0.json":
