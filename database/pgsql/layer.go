@@ -359,6 +359,8 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 
 		namespaceFeaturesChild := layer.Features[0].Feature.Namespace.Name
 		namespaceFeaturesParent := layer.Parent.Features[0].Feature.Namespace.Name
+		log.Debug(namespaceFeaturesChild)
+		log.Debug(namespaceFeaturesParent)
 
 		// Build name:version structures.
 		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
