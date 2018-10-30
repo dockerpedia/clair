@@ -94,6 +94,9 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 				return ErrParentUnknown
 			}
 			layer.Parent = &parent
+			layer.RootNamespace = parent.RootNamespace
+		} else {
+			layer.RootNamespace = layer.Namespace
 		}
 	} else {
 		// The layer is already in the database, check if we need to update it.
@@ -161,9 +164,6 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 
 	// Fallback to the root parent's namespace.
 	if parent != nil {
-		for ; parent.Parent != nil; {
-			parent = parent.Parent
-		}
 		namespace = parent.Namespace
 		if namespace != nil {
 			log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace (from parent)")
