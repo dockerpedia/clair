@@ -292,6 +292,11 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		}
 	}
 
+	var namespaceRootID zero.Int
+	if layer.RootNamespace != nil {
+		namespaceRootID = zero.IntFrom(int64(layer.RootNamespace.ID))
+	}
+
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
@@ -301,7 +306,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, layer.RootNamespace).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, namespaceRootID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
