@@ -356,11 +356,10 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 		add = append(add, layer.Features...)
 	} else if layer.Parent != nil {
 		// There is a parent, we need to diff the Features with it.
-
 		namespaceFeaturesChild := layer.Features[0].Feature.Namespace.Name
 		namespaceFeaturesParent := layer.Parent.Features[0].Feature.Namespace.Name
-		log.Debug(namespaceFeaturesChild)
-		log.Debug(namespaceFeaturesParent)
+		log.Debug(layer.Features[0].Feature)
+		log.Debug(layer.Parent.Features[0])
 
 		// Build name:version structures.
 		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
