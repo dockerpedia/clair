@@ -48,7 +48,7 @@ func init() {
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
-	_, hasFile := files["opt/conda/conda-meta/"]
+	_, hasFile := files["opt/conda/conda-meta/history"]
 	if !hasFile {
 
 		return []database.FeatureVersion{}, nil
@@ -127,5 +127,5 @@ func parsePackageFiles(packagesMap map[string]database.FeatureVersion, files []s
 }
 
 func (l lister) RequiredFilenames() []string {
-	return []string{"opt/conda/conda-meta/history"}
+	return []string{"opt/conda/conda-meta/"}
 }
