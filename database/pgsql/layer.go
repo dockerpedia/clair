@@ -292,6 +292,8 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
 		}
 	}
 
+	rootNamespaceId := zero.IntFrom(int64(rootNamespace))
+
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
@@ -301,7 +303,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, rootNamespace int) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, rootNamespace).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, rootNamespaceId).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
