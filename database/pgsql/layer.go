@@ -162,8 +162,8 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		switch modification {
 		case "add":
 			mapFeatureVersions[fv.ID] = fv
-		//case "del":
-			//delete(mapFeatureVersions, fv.ID)
+		case "del":
+			delete(mapFeatureVersions, fv.ID)
 		default:
 			log.WithField("modification", modification).Warning("unknown Layer_diff_FeatureVersion's modification")
 			return featureVersions, database.ErrInconsistent
@@ -354,7 +354,7 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	if layer.Parent == nil {
 		// There is no parent, every Features are added.
 		add = append(add, layer.Features...)
-	} else if layer.Parent != nil {
+	} else if layer.Parent.Namespace == layer.Namespace {
 		// There is a parent, we need to diff the Features with it.
 
 		// Build name:version structures.
