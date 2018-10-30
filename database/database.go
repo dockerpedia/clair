@@ -87,7 +87,7 @@ type Datastore interface {
 	// updated.
 	// The function has to be idempotent, inserting a layer that already exists
 	// shouldn't return an error.
-	InsertLayer(Layer) error
+	InsertLayer(layer Layer, rootNamespace int) error
 
 	// FindLayer retrieves a Layer from the database.
 	//

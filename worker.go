@@ -111,14 +111,16 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
+	var rootNamespace int
 	// Set Root Namespace
 	if layer.Parent == nil {
-		layer.RootNamespace = layer.Namespace
+		rootNamespace = layer.Namespace.ID
 	} else {
-		layer.RootNamespace = layer.Parent.RootNamespace
+		rootNamespace = layer.Parent.RootNamespace.ID
+
 	}
 
-	return datastore.InsertLayer(layer)
+	return datastore.InsertLayer(layer, rootNamespace)
 }
 
 // detectContent downloads a layer's archive and extracts its Namespace and
