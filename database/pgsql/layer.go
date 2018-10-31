@@ -62,6 +62,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		&nsName,
 		&nsVersionFormat,
 	)
+
 	observeQueryTime("FindLayer", "searchLayer", t)
 
 	if err != nil {
@@ -83,6 +84,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	}
 
 	if !rootnsID.IsZero() {
+		log.Error("string desde la bd ", nsName.String)
 		layer.RootNamespace = &database.Namespace{
 			Model:         database.Model{ID: int(rootnsID.Int64)},
 			Name:          nsName.String,
