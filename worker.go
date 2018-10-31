@@ -131,6 +131,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		} else {
 			log.Error("mosorio: namespace root from the namespace unable")
 		}
+
 	}
 	log.Error("mosorio: namespace root", rootNamespace)
 
