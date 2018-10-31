@@ -77,12 +77,12 @@ const (
 
 	// layer.go
 	searchLayer = `
-		SELECT l.id, l.name, l.engineversion, r.id, r.name, r.version_format,
-			p.id, p.name, n.id, n.name, n.version_format
+		SELECT l.id, l.name, l.engineversion, 
+			r.id, r.name, r.version_format, p.id, p.name, n.id, n.name, n.version_format
 		FROM Layer l
 			LEFT JOIN Layer p ON l.parent_id = p.id
 			LEFT JOIN Namespace n ON l.namespace_id = n.id
-			LEFT JOIN Namespace r ON p.namespaceroot_id = r.id
+			LEFT JOIN Namespace r ON l.namespaceroot_id = r.id
 		WHERE l.name = $1;`
 
 	searchLayerFeatureVersion = `
