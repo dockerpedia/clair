@@ -243,6 +243,7 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // been modified.
 func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) error {
 	tf := time.Now()
+	log.Error("mosorio: ", namespaceName)
 
 	// Verify parameters
 	if layer.Name == "" {

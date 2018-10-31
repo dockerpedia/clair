@@ -128,7 +128,6 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		rootNamespace = parent.RootNamespace.Name
 	}
 
-	log.Error("valor ", rootNamespace)
 	return datastore.InsertLayer(layer, rootNamespace)
 }
 
