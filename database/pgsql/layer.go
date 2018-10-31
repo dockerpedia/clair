@@ -306,7 +306,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceRootID).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, namespaceRootID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
