@@ -78,6 +78,9 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
+	// Set Root Namespace
+	var rootNamespace string
+
 	if err == commonerr.ErrNotFound {
 		// New layer case.
 		layer = database.Layer{Name: name, EngineVersion: Version}
@@ -94,6 +97,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 				return ErrParentUnknown
 			}
 			layer.Parent = &parent
+			rootNamespace = layer.Parent.RootNamespace.Name
 		}
 	} else {
 		// The layer is already in the database, check if we need to update it.
@@ -110,7 +114,13 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
-	return datastore.InsertLayer(layer)
+	if layer.Parent == nil {
+		layer.RootNamespace = layer.Namespace
+		rootNamespace = layer.RootNamespace.Name
+		log.Error("Parent rootnamespace is (by myself)", rootNamespace)
+	}
+
+	return datastore.InsertLayer(layer, rootNamespace)
 }
 
 // detectContent downloads a layer's archive and extracts its Namespace and
@@ -130,11 +140,15 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 
 	// Detect features.
 	featureVersions, err = detectFeatureVersions(name, files, namespace, parent)
+
 	if err != nil {
 		return
 	}
 	if len(featureVersions) > 0 {
 		log.WithFields(log.Fields{logLayerName: name, "feature count": len(featureVersions)}).Debug("detected features")
+		for _, f := range featureVersions{
+			log.WithFields(log.Fields{logLayerName: name, "feature": f.Feature.Name + " Version" + f.Feature.Name }).Debug("detected features")
+		}
 	}
 
 	return
@@ -147,12 +161,16 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 	}
 	if namespace != nil {
 		log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
-		return
+		if namespace.Name == "conda" {
+			return
+		} else {
+			return
+		}
 	}
 
-	// Fallback to the parent's namespace.
+	// Fallback to the root parent's namespace.
 	if parent != nil {
-		namespace = parent.Namespace
+		namespace = parent.RootNamespace
 		if namespace != nil {
 			log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace (from parent)")
 			return
