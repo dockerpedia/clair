@@ -50,6 +50,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		&layer.ID,
 		&layer.Name,
 		&layer.EngineVersion,
+		&layer.RootNamespace,
 		&parentID,
 		&parentName,
 		&nsID,
