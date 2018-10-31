@@ -47,6 +47,7 @@ import (
 	_ "github.com/coreos/clair/ext/featurens/lsbrelease"
 	_ "github.com/coreos/clair/ext/featurens/osrelease"
 	_ "github.com/coreos/clair/ext/featurens/redhatrelease"
+	_ "github.com/coreos/clair/ext/featurens/condasources"
 	_ "github.com/coreos/clair/ext/imagefmt/aci"
 	_ "github.com/coreos/clair/ext/imagefmt/docker"
 	_ "github.com/coreos/clair/ext/notification/webhook"
