@@ -293,6 +293,10 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 		}
 	}
 
+	//Find or insert root namespace
+	var namespaceRootID zero.Int
+
+
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
@@ -302,7 +306,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceRootID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
