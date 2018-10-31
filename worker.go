@@ -78,6 +78,9 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
+	// Set Root Namespace
+	var rootNamespace string
+
 	if err == commonerr.ErrNotFound {
 		// New layer case.
 		layer = database.Layer{Name: name, EngineVersion: Version}
@@ -94,7 +97,8 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 				return ErrParentUnknown
 			}
 			layer.Parent = &parent
-			layer.RootNamespace = parent.RootNamespace
+			rootNamespace = layer.Parent.RootNamespace.Name
+			log.Error("Parent rootnamespace is (by parent)", layer.Parent.Namespace.Name)
 		}
 	} else {
 		// The layer is already in the database, check if we need to update it.
@@ -111,29 +115,11 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
-	var rootNamespace string
-	// Set Root Namespace
 	if layer.Parent == nil {
 		layer.RootNamespace = layer.Namespace
 		rootNamespace = layer.RootNamespace.Name
-	} else {
-		parent, err := datastore.FindLayer(parentName, false, false)
-		if err != nil && err != commonerr.ErrNotFound {
-			return err
-		}
-		if err == commonerr.ErrNotFound {
-			log.WithFields(log.Fields{logLayerName: name, "parent layer": parentName}).Warning("the parent layer is unknown. it must be processed first")
-			return ErrParentUnknown
-		}
-		layer.Parent = &parent
-		if layer.Parent != nil && layer.Parent.RootNamespace != nil {
-			rootNamespace = layer.Parent.RootNamespace.Name
-		} else {
-			log.Error("mosorio: namespace root from the namespace unable")
-		}
-
 	}
-	log.Error("mosorio: namespace root", rootNamespace)
+	log.Error("Parent rootnamespace is (by myself)", rootNamespace)
 
 	return datastore.InsertLayer(layer, rootNamespace)
 }
