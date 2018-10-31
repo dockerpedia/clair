@@ -98,7 +98,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 			}
 			layer.Parent = &parent
 			rootNamespace = layer.Parent.RootNamespace.Name
-			log.Error("Parent rootnamespace is (by parent)", layer.Parent.Namespace.Name)
+			log.Error("Parent rootnamespace is (by parent)", layer.Parent.RootNamespace.Name)
 		}
 	} else {
 		// The layer is already in the database, check if we need to update it.
@@ -118,8 +118,8 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 	if layer.Parent == nil {
 		layer.RootNamespace = layer.Namespace
 		rootNamespace = layer.RootNamespace.Name
+		log.Error("Parent rootnamespace is (by myself)", rootNamespace)
 	}
-	log.Error("Parent rootnamespace is (by myself)", rootNamespace)
 
 	return datastore.InsertLayer(layer, rootNamespace)
 }
