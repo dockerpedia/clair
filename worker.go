@@ -111,10 +111,10 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return err
 	}
 
-	var rootNamespace string
+	var rootNamespaceID int
 	// Set Root Namespace
 	if layer.Parent == nil {
-		rootNamespace=layer.Namespace.Name
+		rootNamespaceID = layer.Namespace.ID
 	} else {
 		parent, err := datastore.FindLayer(parentName, false, false)
 		if err != nil && err != commonerr.ErrNotFound {
@@ -125,10 +125,9 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 			return ErrParentUnknown
 		}
 		layer.Parent = &parent
-		log.Error("mosorio: parent", layer.Parent)
 	}
-
-	return datastore.InsertLayer(layer, rootNamespace)
+	log.Error("valor: ", rootNamespaceID)
+	return datastore.InsertLayer(layer, rootNamespaceID)
 }
 
 // detectContent downloads a layer's archive and extracts its Namespace and
