@@ -360,32 +360,22 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 		// There is no parent, every Features are added.
 		add = append(add, layer.Features...)
 	} else if layer.Parent != nil {
-		// There is a parent, we need to diff the Features with it.
-		namespaceFeaturesChild := layer.Features[0].Feature.Namespace.Name
-		namespaceFeaturesParent := layer.Parent.Features[0].Feature.Namespace.Name
-		log.Debug(layer.Features[0].Feature)
-		log.Debug(layer.Parent.Features[0])
-
 		// Build name:version structures.
 		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
 		parentLayerFeaturesMapNV, parentLayerFeaturesNV := createNV(layer.Parent.Features)
 
 		// Calculate the added and deleted FeatureVersions name:version.
 		addNV := compareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
+		delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 
 		for _, nv := range addNV {
 			add = append(add, *layerFeaturesMapNV[nv])
 		}
 
-		if namespaceFeaturesParent == namespaceFeaturesChild {
-			log.Debug("mosorio: the layer has same types of package, deleting")
-			delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
-			for _, nv := range delNV {
-				del = append(del, *parentLayerFeaturesMapNV[nv])
-			}
-		} else {
-			log.Debug("mosorio: the layer has different types of package")
+		for _, nv := range delNV {
+			del = append(del, *parentLayerFeaturesMapNV[nv])
 		}
+
 	}
 
 	// Insert FeatureVersions in the database.
