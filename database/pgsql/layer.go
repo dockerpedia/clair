@@ -241,10 +241,8 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) error {
+func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceRootName string) error {
 	tf := time.Now()
-	log.Error("mosorio: ", namespaceName)
-
 	// Verify parameters
 	if layer.Name == "" {
 		log.Warning("could not insert a layer which has an empty Name")
@@ -295,7 +293,10 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 
 	//Find or insert root namespace
 	var namespaceRootID zero.Int
-
+	err = pgSQL.QueryRow(searchNamespace, namespaceRootName).Scan(&namespaceRootID)
+	if err != nil {
+		log.Error("unable to find the namespace")
+	}
 
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
