@@ -99,7 +99,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 			layer.Parent = &parent
 			rootNamespace = layer.Parent.RootNamespace.Name
 			log.Error("Parent rootnamespace is (by parent)", layer.Parent.RootNamespace.Name)
-			log.Error("Parent rootnamespace is (by parent)", parent.RootNamespace.Name)
+			log.Error("Parent rootnamespace is (by parent-database)", parent.RootNamespace.Name)
 
 		}
 	} else {
