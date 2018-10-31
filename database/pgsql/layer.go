@@ -37,13 +37,15 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 
 	// Find the layer
 	var (
-		layer           database.Layer
-		parentID        zero.Int
-		parentName      zero.String
-		rootNamespace   zero.String
-		nsID            zero.Int
-		nsName          sql.NullString
-		nsVersionFormat sql.NullString
+		layer           	database.Layer
+		parentID        	zero.Int
+		parentName      	zero.String
+		rootnsID	    	zero.Int
+		rootnsName	    	sql.NullString
+		rootnsVersionFormat	sql.NullString
+		nsID            	zero.Int
+		nsName          	sql.NullString
+		nsVersionFormat 	sql.NullString
 	)
 
 	t := time.Now()
@@ -51,7 +53,9 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		&layer.ID,
 		&layer.Name,
 		&layer.EngineVersion,
-		&rootNamespace,
+		&rootnsID,
+		&rootnsName,
+		&rootnsVersionFormat,
 		&parentID,
 		&parentName,
 		&nsID,
@@ -78,6 +82,13 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		}
 	}
 
+	if !rootnsID.IsZero() {
+		layer.RootNamespace = &database.Namespace{
+			Model:         database.Model{ID: int(rootnsID.Int64)},
+			Name:          nsName.String,
+			VersionFormat: nsVersionFormat.String,
+		}
+	}
 	// Find its features
 	if withFeatures || withVulnerabilities {
 		// Create a transaction to disable hash/merge joins as our experiments have shown that
