@@ -381,14 +381,15 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 
 		// Calculate the added and deleted FeatureVersions name:version.
 		addNV := compareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
-		delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 
 		for _, nv := range addNV {
 			add = append(add, *layerFeaturesMapNV[nv])
 		}
-
-		for _, nv := range delNV {
-			del = append(del, *parentLayerFeaturesMapNV[nv])
+		if(layer.Namespace == layer.Parent.Namespace) {
+			delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+			for _, nv := range delNV {
+				del = append(del, *parentLayerFeaturesMapNV[nv])
+			}
 		}
 
 	}
