@@ -77,10 +77,12 @@ const (
 
 	// layer.go
 	searchLayer = `
-		SELECT l.id, l.name, l.engineversion, p.id, p.name, n.id, n.name, n.version_format
+		SELECT l.id, l.name, l.engineversion, 
+			r.id, r.name, r.version_format, p.id, p.name, n.id, n.name, n.version_format
 		FROM Layer l
 			LEFT JOIN Layer p ON l.parent_id = p.id
 			LEFT JOIN Namespace n ON l.namespace_id = n.id
+			LEFT JOIN Namespace r ON l.namespaceroot_id = r.id
 		WHERE l.name = $1;`
 
 	searchLayerFeatureVersion = `
@@ -113,8 +115,8 @@ const (
 						AND v.deleted_at IS NULL`
 
 	insertLayer = `
-		INSERT INTO Layer(name, engineversion, parent_id, namespace_id, created_at)
-    VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)
+		INSERT INTO Layer(name, engineversion, parent_id, namespace_id, namespaceroot_id,  created_at)
+    VALUES($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
     RETURNING id`
 
 	updateLayer = `UPDATE LAYER SET engineversion = $2, namespace_id = $3 WHERE id = $1`

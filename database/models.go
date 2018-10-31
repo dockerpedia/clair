@@ -33,6 +33,7 @@ type Layer struct {
 	Parent        *Layer
 	Namespace     *Namespace
 	Features      []FeatureVersion
+	RootNamespace *Namespace
 }
 
 type Namespace struct {

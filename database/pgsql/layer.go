@@ -37,12 +37,15 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 
 	// Find the layer
 	var (
-		layer           database.Layer
-		parentID        zero.Int
-		parentName      zero.String
-		nsID            zero.Int
-		nsName          sql.NullString
-		nsVersionFormat sql.NullString
+		layer           	database.Layer
+		parentID        	zero.Int
+		parentName      	zero.String
+		rootnsID	    	zero.Int
+		rootnsName	    	sql.NullString
+		rootnsVersionFormat	sql.NullString
+		nsID            	zero.Int
+		nsName          	sql.NullString
+		nsVersionFormat 	sql.NullString
 	)
 
 	t := time.Now()
@@ -50,12 +53,16 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		&layer.ID,
 		&layer.Name,
 		&layer.EngineVersion,
+		&rootnsID,
+		&rootnsName,
+		&rootnsVersionFormat,
 		&parentID,
 		&parentName,
 		&nsID,
 		&nsName,
 		&nsVersionFormat,
 	)
+
 	observeQueryTime("FindLayer", "searchLayer", t)
 
 	if err != nil {
@@ -76,6 +83,13 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		}
 	}
 
+	if !rootnsID.IsZero() {
+		layer.RootNamespace = &database.Namespace{
+			Model:         database.Model{ID: int(rootnsID.Int64)},
+			Name:          rootnsName.String,
+			VersionFormat: rootnsVersionFormat.String,
+		}
+	}
 	// Find its features
 	if withFeatures || withVulnerabilities {
 		// Create a transaction to disable hash/merge joins as our experiments have shown that
@@ -241,9 +255,8 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
+func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceRootName string) error {
 	tf := time.Now()
-
 	// Verify parameters
 	if layer.Name == "" {
 		log.Warning("could not insert a layer which has an empty Name")
@@ -292,6 +305,13 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		}
 	}
 
+	//Find or insert root namespace
+	var namespaceRootID zero.Int
+	err = pgSQL.QueryRow(searchNamespace, namespaceRootName).Scan(&namespaceRootID)
+	if err != nil {
+		log.Error("unable to find the namespace")
+	}
+
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
@@ -301,7 +321,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, namespaceRootID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
@@ -355,23 +375,23 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 		// There is no parent, every Features are added.
 		add = append(add, layer.Features...)
 	} else if layer.Parent != nil {
-		// There is a parent, we need to diff the Features with it.
-
 		// Build name:version structures.
 		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
 		parentLayerFeaturesMapNV, parentLayerFeaturesNV := createNV(layer.Parent.Features)
 
 		// Calculate the added and deleted FeatureVersions name:version.
 		addNV := compareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
-		delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 
-		// Fill the structures containing the added and deleted FeatureVersions.
 		for _, nv := range addNV {
 			add = append(add, *layerFeaturesMapNV[nv])
 		}
-		for _, nv := range delNV {
-			del = append(del, *parentLayerFeaturesMapNV[nv])
+		if(layer.Namespace == layer.Parent.Namespace) {
+			delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+			for _, nv := range delNV {
+				del = append(del, *parentLayerFeaturesMapNV[nv])
+			}
 		}
+
 	}
 
 	// Insert FeatureVersions in the database.
