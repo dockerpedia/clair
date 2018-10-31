@@ -126,7 +126,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 			return ErrParentUnknown
 		}
 		layer.Parent = &parent
-		rootNamespace = layer.Parent.Name
+		rootNamespace = layer.Parent.RootNamespace.Name
 	}
 	log.Error("mosorio: namespace root", rootNamespace)
 
