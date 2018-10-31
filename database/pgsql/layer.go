@@ -84,11 +84,10 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	}
 
 	if !rootnsID.IsZero() {
-		log.Error("string desde la bd ", nsName.String)
 		layer.RootNamespace = &database.Namespace{
 			Model:         database.Model{ID: int(rootnsID.Int64)},
-			Name:          nsName.String,
-			VersionFormat: nsVersionFormat.String,
+			Name:          rootnsName.String,
+			VersionFormat: rootnsVersionFormat.String,
 		}
 	}
 	// Find its features
