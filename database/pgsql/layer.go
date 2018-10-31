@@ -241,7 +241,7 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName int) error {
+func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) error {
 	tf := time.Now()
 	log.Error("mosorio: ", namespaceName)
 
