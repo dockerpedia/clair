@@ -125,7 +125,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 			return ErrParentUnknown
 		}
 		layer.Parent = &parent
-		rootNamespace = parent.RootNamespace.Name
+		log.Error("mosorio: parent", layer.Parent)
 	}
 
 	return datastore.InsertLayer(layer, rootNamespace)
