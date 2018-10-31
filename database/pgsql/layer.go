@@ -50,7 +50,6 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		&layer.ID,
 		&layer.Name,
 		&layer.EngineVersion,
-		&layer.RootNamespace,
 		&parentID,
 		&parentName,
 		&nsID,
@@ -278,12 +277,6 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
 	}
 
-
-	var IDRootNamespace int
-	err = pgSQL.QueryRow(searchNamespace, namespaceName).Scan(&IDRootNamespace)
-
-
-
 	// Find or insert namespace if provided.
 	var namespaceID zero.Int
 	if layer.Namespace != nil {
@@ -299,7 +292,6 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 		}
 	}
 
-
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
@@ -309,7 +301,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer, namespaceName string) erro
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID, IDRootNamespace).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
