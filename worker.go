@@ -170,7 +170,7 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 
 	// Fallback to the root parent's namespace.
 	if parent != nil {
-		namespace = parent.Namespace
+		namespace = parent.RootNamespace
 		if namespace != nil {
 			log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace (from parent)")
 			return
