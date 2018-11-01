@@ -20,10 +20,10 @@ func init() {
 	RegisterMigration(migrate.Migration{
 		ID: 7,
 		Up: migrate.Queries([]string{
-			`ALTER TABLE Namespace ADD COLUMN namespaceroot_id INT NULL REFERENCES Namespace;`,
+			`ALTER TABLE Layer ADD COLUMN namespaceroot_id INT NULL REFERENCES Namespace;`,
 		}),
 		Down: migrate.Queries([]string{
-			`ALTER TABLE Namespace DROP COLUMN namespaceroot_id;`,
+			`ALTER TABLE Layer DROP COLUMN namespaceroot_id;`,
 		}),
 	})
 }
